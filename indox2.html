@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارة الموقع</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #f59e0b;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+        }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f9fafb;
+        }
+        
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+        
+        .post-card {
+            transition: all 0.2s ease;
+        }
+        
+        .post-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Animation for notifications */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .notification {
+            animation: slideIn 0.3s ease forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Firebase Configuration (Replace with your config) -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTY0MErxZJqKVtPnjYawABfxN8X255nRM",
+            authDomain: "head001-e4bc3.firebaseapp.com",
+            projectId: "head001-e4bc3",
+            storageBucket: "head001-e4bc3.firebasestorage.app",
+            messagingSenderId: "53707789702",
+            appId: "1:53707789702:web:3f6a3c814aa98656654807"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+    </script>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar bg-white w-64 border-r border-gray-200 flex-shrink-0 fixed h-full z-10">
+            <div class="p-4 border-b border-gray-200">
+                <h1 class="text-xl font-bold text-indigo-600">لوحة التحكم</h1>
+            </div>
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-indigo-50 group" onclick="showSection('dashboard')">
+                            <i class="fas fa-tachometer-alt mr-3 text-indigo-500"></i>
+                            <span>الرئيسية</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-indigo-50 group" onclick="showSection('posts')">
+                            <i class="fas fa-newspaper mr-3 text-indigo-500"></i>
+                            <span>إدارة المنشورات</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-indigo-50 group" onclick="showSection('settings')">
+                            <i class="fas fa-cog mr-3 text-indigo-500"></i>
+                            <span>إعدادات الموقع</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-indigo-50 group" onclick="showSection('users')">
+                            <i class="fas fa-users mr-3 text-indigo-500"></i>
+                            <span>المستخدمين</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="absolute bottom-0 w-full p-4 border-t border-gray-200">
+                <button onclick="logout()" class="flex items-center p-2 text-gray-700 rounded-lg hover:bg-red-50 group w-full">
+                    <i class="fas fa-sign-out-alt mr-3 text-red-500"></i>
+                    <span>تسجيل الخروج</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto ml-64">
+            <!-- Mobile Header -->
+            <header class="bg-white shadow-sm p-4 flex items-center justify-between lg:hidden">
+                <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-bars text-gray-600"></i>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-800">لوحة التحكم</h1>
+                <div class="w-8"></div> <!-- Spacer for balance -->
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="p-6">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">مرحبا بك في لوحة التحكم</h2>
+                    <p class="text-gray-600">هنا يمكنك إدارة جميع جوانب موقعك</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">إجمالي المنشورات</p>
+                                <h3 class="text-2xl font-bold" id="totalPosts">0</h3>
+                            </div>
+                            <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">المستخدمين</p>
+                                <h3 class="text-2xl font-bold" id="totalUsers">0</h3>
+                            </div>
+                            <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">الزيارات اليوم</p>
+                                <h3 class="text-2xl font-bold">1,234</h3>
+                            </div>
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500">الإيرادات</p>
+                                <h3 class="text-2xl font-bold">$5,678</h3>
+                            </div>
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">أحدث المنشورات</h3>
+                        <a href="#" class="text-indigo-600 hover:text-indigo-800" onclick="showSection('posts')">عرض الكل</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العنوان</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المشاهدات</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="recentPosts">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Posts Management Section -->
+            <section id="posts" class="p-6 hidden">
+                <div class="mb-6 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">إدارة المنشورات</h2>
+                        <p class="text-gray-600">هنا يمكنك إضافة وتعديل وحذف المنشورات</p>
+                    </div>
+                    <button onclick="showAddPostModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        إضافة منشور جديد
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                        <div class="flex items-center">
+                            <input type="text" placeholder="بحث..." class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <select class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option>الكل</option>
+                                <option>منشور</option>
+                                <option>صفحة</option>
+                            </select>
+                            <select class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option>الكل</option>
+                                <option>منشور</option>
+                                <option>مسودة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العنوان</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">النوع</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="postsTable">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 border-t border-gray-200 flex justify-between items-center">
+                        <div class="text-sm text-gray-500">
+                            عرض <span id="startItem">1</span> إلى <span id="endItem">10</span> من <span id="totalItems">50</span> عنصر
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">السابق</button>
+                            <button class="px-3 py-1 border border-gray-300 rounded-lg bg-indigo-600 text-white">1</button>
+                            <button class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">2</button>
+                            <button class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">التالي</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="p-6 hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">إعدادات الموقع</h2>
+                    <p class="text-gray-600">هنا يمكنك تعديل إعدادات الموقع العامة</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">الإعدادات العامة</h3>
+                    <form id="generalSettingsForm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label for="siteTitle" class="block text-sm font-medium text-gray-700 mb-1">عنوان الموقع</label>
+                                <input type="text" id="siteTitle" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="عنوان الموقع">
+                            </div>
+                            <div>
+                                <label for="siteDescription" class="block text-sm font-medium text-gray-700 mb-1">وصف الموقع</label>
+                                <input type="text" id="siteDescription" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="وصف الموقع">
+                            </div>
+                            <div>
+                                <label for="siteLogo" class="block text-sm font-medium text-gray-700 mb-1">شعار الموقع</label>
+                                <div class="flex items-center">
+                                    <input type="file" id="siteLogo" class="hidden">
+                                    <button type="button" onclick="document.getElementById('siteLogo').click()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg mr-2">اختر صورة</button>
+                                    <span class="text-sm text-gray-500">لم يتم اختيار صورة</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="siteFavicon" class="block text-sm font-medium text-gray-700 mb-1">أيقونة الموقع</label>
+                                <div class="flex items-center">
+                                    <input type="file" id="siteFavicon" class="hidden">
+                                    <button type="button" onclick="document.getElementById('siteFavicon').click()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg mr-2">اختر صورة</button>
+                                    <span class="text-sm text-gray-500">لم يتم اختيار صورة</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <label for="siteKeywords" class="block text-sm font-medium text-gray-700 mb-1">كلمات مفتاحية</label>
+                            <textarea id="siteKeywords" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="كلمات مفتاحية مفصولة بفواصل"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">حفظ التغييرات</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class

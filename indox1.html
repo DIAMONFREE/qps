@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة المحتوى التقني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+        }
+        
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .loading-spinner {
+            border-top-color: #3b82f6;
+            animation: spinner 1.5s linear infinite;
+        }
+        
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Firebase Configuration -->
+    <script>
+        // Replace with your Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCTY0MErxZJqKVtPnjYawABfxN8X255nRM",
+            authDomain: "head001-e4bc3.firebaseapp.com",
+            projectId: "head001-e4bc3",
+            storageBucket: "head001-e4bc3.firebasestorage.app",
+            messagingSenderId: "53707789702",
+            appId: "1:53707789702:web:3f6a3c814aa98656654807"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+    </script>
+
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4 space-x-reverse">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                <span class="text-xl font-bold">منصة المحتوى التقني</span>
+            </div>
+            <div class="hidden md:flex space-x-6 space-x-reverse">
+                <a href="#" class="hover:text-blue-200 transition">الرئيسية</a>
+                <a href="#" class="hover:text-blue-200 transition">المقالات</a>
+                <a href="#" class="hover:text-blue-200 transition">الدورات</a>
+                <a href="#" class="hover:text-blue-200 transition">من نحن</a>
+            </div>
+            <button id="authButton" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition">
+                تسجيل الدخول
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6">أحدث المحتوى التقني بين يديك</h1>
+            <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">منصة متخصصة في نشر أحدث المقالات والدروس التقنية بأسلوب مبسط واحترافي</p>
+            <div class="flex justify-center space-x-4 space-x-reverse">
+                <button class="bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition">
+                    ابدأ القراءة
+                </button>
+                <button class="border-2 border-white text-white px-6 py-3 rounded-lg font-bold hover:bg-white hover:text-blue-600 transition">
+                    تصفح المقالات
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Articles -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-gray-800 mb-12 text-center">أحدث المقالات</h2>
+            
+            <div id="articlesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Articles will be loaded here from Firebase -->
+                <div class="text-center py-8">
+                    <div class="loading-spinner inline-block w-8 h-8 border-4 border-blue-200 rounded-full"></div>
+                    <p class="mt-2 text-gray-600">جاري تحميل المقالات...</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <button class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">
+                    عرض المزيد
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Courses -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-gray-800 mb-12 text-center">الدورات الشائعة</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                    <div class="h-48 bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">أساسيات الذكاء الاصطناعي</h3>
+                        <p class="text-gray-600 mb-4">تعلم المفاهيم الأساسية للذكاء الاصطناعي وتطبيقاته العملية</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">12 درس</span>
+                            <button class="text-blue-600 font-medium hover:text-blue-800">البدء الآن</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                    <div class="h-48 bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">تطوير الويب المتقدم</h3>
+                        <p class="text-gray-600 mb-4">احترف تطوير تطبيقات الويب باستخدام أحدث التقنيات</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">24 درس</span>
+                            <button class="text-blue-600 font-medium hover:text-blue-800">البدء الآن</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                    <div class="h-48 bg-gradient-to-r from-yellow-500 to-red-500 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">تطوير تطبيقات الجوال</h3>
+                        <p class="text-gray-600 mb-4">أنشئ تطبيقات جوال متكاملة باستخدام Flutter</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">18 درس</span>
+                            <button class="text-blue-600 font-medium hover:text-blue-800">البدء الآن</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                    <div class="h-48 bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                        </svg>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">علم البيانات وتحليلها</h3>
+                        <p class="text-gray-600 mb-4">احترف تحليل البيانات وتصورها باستخدام Python</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-500">15 درس</span>
+                            <button class="text-blue-600 font-medium hover:text-blue-800">البدء الآن</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Article Modal -->
+    <div id="articleModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-800"></h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent" class="p-6 article-content">
+                <!-- Article content will be loaded here -->
+            </div>
+            <div class="p-4 border-t flex justify-end">
+                <button id="closeModalBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">تسجيل الدخول</h3>
+                <button id="closeAuthModal" class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+                    <input type="email" id="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 mb-2">كلمة المرور</label>
+                    <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+                    تسجيل الدخول
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center">
+                <p class="text-gray-600">ليس لديك حساب؟ <button id="showRegister" class="text-blue-600 hover:text-blue-800">سجل الآن</button></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">منصة المحتوى التقني
