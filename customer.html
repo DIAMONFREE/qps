@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة طلبات الصيانة عن بعد | MyPhone5600</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background-color: #f4f6f9; color: #212529; padding: 15px; }
+        .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; }
+        
+        header { background: linear-gradient(135deg, #0284c7, #0369a1); color: white; padding: 25px 20px; text-align: center; }
+        header h1 { font-size: 24px; margin-bottom: 5px; }
+        header p { font-size: 14px; opacity: 0.9; }
+
+        .tabs { display: flex; border-bottom: 2px solid #f1f3f5; }
+        .tab { flex: 1; text-align: center; padding: 15px; cursor: pointer; font-weight: bold; color: #6c757d; transition: 0.3s; background: #f8f9fa; border: none; outline: none; font-size: 15px; }
+        .tab.active { background: white; color: #0284c7; border-bottom: 3px solid #0284c7; }
+
+        .tab-content { padding: 30px; display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: #495057; }
+        input[type="text"], input[type="tel"], textarea { width: 100%; padding: 12px 14px; border: 1px solid #ced4da; border-radius: 10px; font-size: 14px; transition: all 0.25s ease; }
+        input:focus, textarea:focus { border-color: #0284c7; outline: none; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+        textarea { resize: vertical; height: 80px; }
+
+        button.btn-primary { width: 100%; padding: 14px; background-color: #0284c7; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.btn-primary:hover { background-color: #0369a1; }
+        
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; text-align: center; }
+        .result-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+        .result-info { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; text-align: right; }
+        .result-error { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .id-highlight { font-size: 28px; font-weight: bold; color: #198754; letter-spacing: 3px; margin: 10px 0; display: block; }
+        
+        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; color: white; margin-bottom: 10px; }
+        .st-pending { background-color: #f39c12; }
+        .st-accepted { background-color: #2ecc71; }
+        .st-rejected { background-color: #e74c3c; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📱 خدمة الطلبات عن بعد</h1>
+        <p>سجل طلب إصلاح هاتفك من منزلك وحدد موعداً للحضور</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('newRequest')">🆕 طلب جديد</button>
+        <button class="tab" onclick="switchTab('trackRequest')">🔍 سجلت طلباً مسبقاً</button>
+    </div>
+
+    <!-- قسم طلب جديد -->
+    <div id="newRequest" class="tab-content active">
+        <form id="remoteForm">
+            <div class="form-group">
+                <label>الاسم الأول:</label>
+                <input type="text" id="rFirstName" required placeholder="مثال: أحمد">
+            </div>
+            <div class="form-group">
+                <label>اللقب العائلي:</label>
+                <input type="text" id="rLastName" required placeholder="مثال: بن علي">
+            </div>
+            <div class="form-group">
+                <label>رقم الهاتف للتواصل:</label>
+                <input type="tel" id="rPhone" required placeholder="05XX XX XX XX">
+            </div>
+            <div class="form-group">
+                <label>نوع الهاتف (اختياري ولكن مفضل):</label>
+                <input type="text" id="rModel" placeholder="مثال: Samsung Galaxy S21">
+            </div>
+            <div class="form-group">
+                <label>وصف العطل باختصار:</label>
+                <textarea id="rDesc" required placeholder="مثال: الشاشة مكسورة ولا تستجيب لللمس..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary" id="btnSubmit">إرسال الطلب للمراجعة 📤</button>
+        </form>
+        <div id="msgNewSuccess" class="result-box result-success">
+            <p>✅ تم إرسال طلبك بنجاح! يرجى الاحتفاظ بهذا المعرف (ID) لمتابعة حالة طلبك:</p>
+            <span id="newGeneratedId" class="id-highlight"></span>
+            <p style="font-size: 13px;">انتقل لقسم "سجلت طلباً مسبقاً" لاحقاً للتحقق من موعد الحضور.</p>
+        </div>
+    </div>
+
+    <!-- قسم تتبع طلب مسبق -->
+    <div id="trackRequest" class="tab-content">
+        <div class="form-group">
+            <label>أدخل معرف الطلب (ID) الخاص بك:</label>
+            <input type="text" id="trackId" placeholder="اكتب الـ ID المكون من 8 أرقام هنا...">
+        </div>
+        <button type="button" class="btn-primary" id="btnTrack">استعلام عن الحالة 🔎</button>
+        
+        <div id="trackResultBox" class="result-box result-info">
+            <div id="trackStatusBadge" class="status-badge"></div>
+            <p><strong>الاسم:</strong> <span id="trName"></span></p>
+            <div id="trMessage" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #0369a1; font-weight: bold;"></div>
+        </div>
+        <div id="trackError" class="result-box result-error">❌ لم يتم العثور على طلب بهذا المعرف. تأكد من الرقم والمحاولة مجدداً.</div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyCB-YZdQ-FKBMBOiGLf48t3JUK0_LGZ5fY",
+        authDomain: "myphone5600.firebaseapp.com",
+        projectId: "myphone5600",
+        storageBucket: "myphone5600.firebasestorage.app",
+        messagingSenderId: "73379275703",
+        appId: "1:73379275703:web:eebfe8770d933bc295be32"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.switchTab = function(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    document.getElementById('remoteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        document.getElementById('btnSubmit').disabled = true;
+        let uniqueId = Math.floor(10000000 + Math.random() * 90000000).toString();
+        
+        try {
+            await setDoc(doc(db, "remoteRequests", uniqueId), {
+                firstName: document.getElementById('rFirstName').value.trim(),
+                lastName: document.getElementById('rLastName').value.trim(),
+                phone: document.getElementById('rPhone').value.trim(),
+                model: document.getElementById('rModel').value.trim() || "غير محدد",
+                description: document.getElementById('rDesc').value.trim(),
+                status: "قيد الانتظار", 
+                appointmentDate: null,
+                createdAt: new Date()
+            });
+            document.getElementById('remoteForm').style.display = 'none';
+            document.getElementById('newGeneratedId').innerText = uniqueId;
+            document.getElementById('msgNewSuccess').style.display = 'block';
+        } catch (error) { alert("خطأ في الاتصال: " + error.message); document.getElementById('btnSubmit').disabled = false;}
+    });
+
+    document.getElementById('btnTrack').addEventListener('click', async () => {
+        const id = document.getElementById('trackId').value.trim();
+        if(!id) return alert("يرجى إدخال المعرف!");
+        
+        document.getElementById('trackResultBox').style.display = 'none';
+        document.getElementById('trackError').style.display = 'none';
+        
+        try {
+            const docSnap = await getDoc(doc(db, "remoteRequests", id));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                document.getElementById('trName').innerText = data.firstName + " " + data.lastName;
+                
+                const badge = document.getElementById('trackStatusBadge');
+                const msgBox = document.getElementById('trMessage');
+                
+                if(data.status === "قيد الانتظار") {
+                    badge.className = "status-badge st-pending"; badge.innerText = "⏳ قيد مراجعة موظف الاستقبال";
+                    msgBox.innerHTML = "طلبك قيد المراجعة حالياً، يرجى التحقق لاحقاً لمعرفة موعد الحضور.";
+                } else if(data.status === "مقبول") {
+                    badge.className = "status-badge st-accepted"; badge.innerText = "✅ تمت الموافقة";
+                    const dateObj = new Date(data.appointmentDate);
+                    const formattedDate = dateObj.toLocaleDateString('ar-EG') + " على الساعة " + dateObj.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+                    msgBox.innerHTML = `🎉 تم قبول طلبك! يرجى إحضار هاتفك للمحل في الموعد التالي:<br><span style="color:#198754; font-size:16px; margin-top:8px; display:block;">📅 ${formattedDate}</span>`;
+                } else if(data.status === "مرفوض") {
+                    badge.className = "status-badge st-rejected"; badge.innerText = "❌ نعتذر، تم رفض الطلب";
+                    msgBox.innerHTML = "نعتذر منك، لا يمكننا استقبال هذا الجهاز حالياً لعدم توفر قطع الغيار أو لأسباب فنية.";
+                }
+                
+                document.getElementById('trackResultBox').style.display = 'block';
+            } else {
+                document.getElementById('trackError').style.display = 'block';
+            }
+        } catch(err) { alert("خطأ: " + err.message); }
+    });
+</script>
+</body>
+</html>
